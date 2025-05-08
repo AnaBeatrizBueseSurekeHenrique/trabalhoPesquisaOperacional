@@ -8,6 +8,51 @@
 #include <vector>
 using namespace std;
 
+double numero(string str, int it){
+    double inteiros = 0;
+    int exp;
+    double decimal = 0;
+    double result = 1;
+    string aux = "";
+    if(it == 1 && str[it - 1] == '-'){
+        result = -1;
+    } else{
+        if(str[it-1] == '-'){
+            result = -1;
+        }
+        if(str[it] == '-'){
+            result = -1;
+            it++;
+        }
+    }
+    while(it < str.size() && isdigit(str[it]) || str[it] == '.'){
+        aux = "";
+        if(isdigit(str[it])){
+            while(isdigit(str[it])){
+                aux += str[it];
+                (it)++;
+            }
+            inteiros = stoi(aux, 0, 10);
+        } else{
+            if(str[it] == '.'){
+                exp = 0;
+                (it)++;
+                if(isdigit(str[it])){
+                    while(isdigit(str[it])){
+                        aux += str[it];
+                        (it)++;
+                        exp++;
+                    }
+                    decimal = stoi(aux, 0, 10);
+                    decimal = decimal * pow(10, (exp*(-1)));
+                }
+            }
+        } 
+    }
+    result = result*(inteiros + decimal);
+    return result;
+}
+
 int calcularInt(string str, int pos){
     int numero = 0;
     int exp;
@@ -93,67 +138,58 @@ void realizaVariavelFolga(vector<string> *vec, int *max){
         (*vec)[i] = mudarEq((*vec)[i], max);
     }
 }
-int transformaNumXEmInt(string str, int vez){
+double transformaNumX(string str, int vez){
     vez++;
     int pos = str.find("x" + to_string(vez));
     if(pos == string::npos){
         return 0;
     }
-    int numero;
+    double num;
     pos--;
     if(isdigit(str[pos])){
-        while(isdigit(str[pos])){
+        while(isdigit(str[pos]) || str[pos] == '.'){
             pos--;
         }
-        numero = calcularInt(str, pos+1);
+        num = numero(str, pos+1);
     } else{
-        numero = 1;
+        num = 1;
     }
-    if(str[pos] == '-'){
-        numero *= -1;
+    if(str[pos] == '-' &&  num > 0){
+        num *= -1;
     }
-    return numero;
+    return num;
 }
-void porValoresMatriz(vector<string> vec, vector<vector<int>> matrix, vector<int> vetorLinha, vector<int> vetorResult, vector<vector<int>> matrixB){
-   for(int i = 0; i < matrix.size(); i++){
-        for(int j = 0; j < matrix[0].size(); j++){
-            matrix[i][j] = transformaNumXEmInt(vec[i+1], j);
+void porValoresMatriz(vector<string> vec, vector<vector<double>> *matrix, vector<double> *vetorLinha, vector<double> *vetorResult){
+   for(int i = 0; i < (*matrix).size(); i++){
+        for(int j = 0; j < (*matrix)[0].size(); j++){
+            (*matrix)[i][j] = transformaNumX(vec[i+1], j);
         }
    }
-   for(int i = 0; i < matrix[0].size(); i++){
-        vetorLinha[i] = transformaNumXEmInt(vec[0], i);
+    for(int i = 0; i < (*matrix)[0].size(); i++){
+        (*vetorLinha)[i] = transformaNumX(vec[0], i);
    }
-   for(int i = 0; i < vetorResult.size(); i++){
-        vetorResult[i] = calcularInt(vec[i+1], vec[i+1].find('=') + 1);
+   for(int i = 0; i < (*vetorResult).size(); i++){
+        (*vetorResult)[i] = numero(vec[i+1], vec[i+1].find('=') + 1);
    }
-   for(int i = 0; i < matrixB.size(); i++){
-        for(int j = 0; j < matrix[0].size(); j++){
-            matrixB[i][j] = matrix[i][j];
-        }
-   }
+  
    cout << "Matriz A: " << endl;
-   for(int i = 0; i < matrix.size(); i++){
-        for(int j = 0; j < matrix[0].size(); j++){
-            cout << matrix[i][j] << " "; 
+   for(int i = 0; i < (*matrix).size(); i++){
+        for(int j = 0; j < (*matrix)[0].size(); j++){
+            cout << (*matrix)[i][j] << " "; 
         }
         cout << endl;
     }
     cout << endl;
     cout << "Matriz B: " << endl;
-    for(int i = 0; i < matrixB.size();i++){
-        for(int j = 0; j < matrixB[0].size();j++){
-            cout << matrixB[i][j] << " ";
-        }
-        cout << endl;
-    }
     cout << endl;
     cout << "Matriz b: " << endl;
-    for(int i = 0; i < vetorResult.size(); i++){
-        cout << vetorResult[i] << endl;
+    for(int i = 0; i < (*vetorResult).size(); i++){
+        cout << (*vetorResult)[i] << endl;
    }
    cout << endl;
-    cout << "Matriz C: " << endl;
-    for(int i = 0; i < vetorLinha.size(); i++){
-        cout << vetorLinha[i] << " ";
-    }    
+   cout << "Matriz C: " << endl;
+   for(int i = 0; i < (*vetorLinha).size(); i++){
+       cout << (*vetorLinha)[i] << " ";
+   }
+   cout << endl;    
 }
