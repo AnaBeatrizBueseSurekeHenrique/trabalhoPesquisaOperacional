@@ -15,6 +15,12 @@ vector<vector<double>> atribuirValor(vector<vector<double>> matrizA, vector<vect
     return matrizB;
 }
 
+void mostrarVetor(vector<double> vetor){
+    for(int i = 0; i < vetor.size(); i++){
+        cout << vetor[i] << " ";
+    }
+    cout << endl;
+}
 
 vector<vector<double>> mudarPosicoes(vector<vector<double>> matrizA, vector<int> pos, int tamI, int tamJ){
     vector<vector<double>> novaMatriz(tamI, vector<double>(tamJ));

@@ -159,17 +159,17 @@ double transformaNumX(string str, int vez){
     }
     return num;
 }
-void porValoresMatriz(vector<string> vec, vector<vector<double>> *matrix, vector<double> *vetorLinha, vector<double> *vetorResult){
+void porValoresMatriz(vector<string> vec, vector<vector<double>> *matrix, vector<vector<double>> *vetorLinha, vector<vector<double>> *vetorResult){
    for(int i = 0; i < (*matrix).size(); i++){
         for(int j = 0; j < (*matrix)[0].size(); j++){
             (*matrix)[i][j] = transformaNumX(vec[i+1], j);
         }
    }
     for(int i = 0; i < (*matrix)[0].size(); i++){
-        (*vetorLinha)[i] = transformaNumX(vec[0], i);
+        (*vetorLinha)[0][i] = transformaNumX(vec[0], i);
    }
    for(int i = 0; i < (*vetorResult).size(); i++){
-        (*vetorResult)[i] = numero(vec[i+1], vec[i+1].find('=') + 1);
+        (*vetorResult)[i][0] = numero(vec[i+1], vec[i+1].find('=') + 1);
    }
   
    cout << "Matriz A: " << endl;
@@ -184,12 +184,12 @@ void porValoresMatriz(vector<string> vec, vector<vector<double>> *matrix, vector
     cout << endl;
     cout << "Matriz b: " << endl;
     for(int i = 0; i < (*vetorResult).size(); i++){
-        cout << (*vetorResult)[i] << endl;
+        cout << (*vetorResult)[i][0] << endl;
    }
    cout << endl;
    cout << "Matriz C: " << endl;
-   for(int i = 0; i < (*vetorLinha).size(); i++){
-       cout << (*vetorLinha)[i] << " ";
+   for(int i = 0; i < (*vetorLinha)[0].size(); i++){
+       cout << (*vetorLinha)[0][i] << " ";
    }
    cout << endl;    
 }
