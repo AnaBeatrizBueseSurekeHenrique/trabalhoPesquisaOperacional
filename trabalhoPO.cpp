@@ -1,7 +1,7 @@
 #include <iostream>
 #include "transformaMatrizEquacao.h"
 #include "calcularMatrizB.h"
-#include "calculosParaSimples.h"
+#include "calculosParaSimplex.h"
 using namespace std;
 int main(){
     string s;
@@ -32,7 +32,8 @@ int main(){
     for(int i = 0; i < posicoes.size(); i++){
         posicoes[i] = i;
     }
-    posicoes = verificarMatrizCorreta(matrix, posicoes, matrizB.size(), matrizB[0].size());
+    posicoes = {2,3,4,0,1};
+    //posicoes = verificarMatrizCorreta(matrix, posicoes, matrizB.size(), matrizB[0].size());
     vector<int> posicoesN(posicoes.begin() + matrizB[0].size(), posicoes.end());
     matrizB = mudarPosicoes(matrix, posicoes, matrizB.size(), matrizB[0].size());
     cout << "Matriz B" << endl;
@@ -46,35 +47,47 @@ int main(){
     mostrarMatriz(matrizN);
     cout << endl << "Coeficient N " << endl;
     mostrarMatriz(coeficientesN);
-    vector<vector<double>> multSimples = multiplicadorSimplex(matrizB, coeficientesB);
-    cout << "Multiplicacao simples" << endl;
-    mostrarMatriz(multSimples);
-    cout << "Solucao Basica" << endl;
-    vector<vector<double>> solucaoB = solucaoBasica(matrizB, vectorResult);
-    mostrarMatriz(solucaoB);
+    vector<vector<double>> solucaoB(1, vector<double>(matrizB[0].size()));
+    vector<vector<double>> multSimplex = multiplicadorSimplex(matrizB, coeficientesB);
+    vector<vector<double>> custorN(1, vector<double>(coeficientesN.size()));
+    vector<vector<double>> aN(matrizN.size(), vector<double>(1));
+    vector<vector<double>> direcao(matrizB.size(), vector<double>(1));
+    bool menorQZero = true;
+    int posicaoSairBas;
+    int aux;
+    int posSairN;
+    double funcObj;
+    int iteracoes = 1;
+    while(menorQZero){
+        cout << "Numero de iteracoes: " << iteracoes << endl;
+        cout << "Solucao Basica" << endl;
+        solucaoB = solucaoBasica(matrizB, vectorResult);
+        mostrarMatriz(solucaoB);
+        funcObj = calculaFuncaoObjetivo(coeficientesB, solucaoB);
+        cout << "Função objetivo: " << endl;
+        cout << funcObj;
+        cout << "Multiplicacao simplex" << endl;
+        mostrarMatriz(multSimplex);
+        custorN = custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN);
+        if(custorN[0][posSairN] < 0){
+            menorQZero = true;
+        } else{
+            menorQZero = false;
+        }
+        for(int i = 0; i < matrizN.size(); i++){
+            aN[i][0] = matrizN[i][posSairN];
+        }
+        direcao = calculoDirecaoSimplex(matrizB, aN);
+        cout << "Direcao simples: " << endl;
+        mostrarMatriz(direcao);
+        posicaoSairBas = determinacaoPasso(solucaoB, direcao);
+        cout << "Posicao sair Basica: " << posicaoSairBas << endl;
+        trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
+        trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
+        aux = posicoesN[posSairN];
+        posicoesN[posSairN] = posicoes[posicaoSairBas];
+        posicoes[posicaoSairBas] = aux;
+        iteracoes++;
+    }
+    cout << "Acabou :D";
 }
-
-/*
-int main(){
-    int main(){
-    vector<vector<int>> matrix(3, vector<int>(3));
-    matrix[0][0] = -2;
-    matrix[0][1] = 3;
-    matrix[0][2] = -1;
-  //  matrix[0][3] = -2;
-    matrix[1][0] = 1;
-    matrix[1][1] =  -3;
-    matrix[1][2] =  1;
- //   matrix[1][3] = -2;
-    matrix[2][0] = -1;
-    matrix[2][1] = 2;
-    matrix[2][2] = -1;
- //   matrix[2][3] =  1;
-  /*  matrix[3][0] = -2;
-    matrix[3][1] =  2;
-    matrix[3][2] = -3;
-    matrix[3][3] = -1;
-
-    mostrarMatriz(matrix);
-    cout << calcularDeterminante(matrix);
-}*/

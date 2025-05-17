@@ -26,5 +26,5 @@ vector<vector<double>> calculaInversa(vector<vector<double>> vec){
             }
        }
     }
-
+    return identidade;
 }
