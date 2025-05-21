@@ -2,7 +2,14 @@
 #include "transformaMatrizEquacao.h"
 #include "calcularMatrizB.h"
 #include "calculosParaSimplex.h"
+#include<math.h>
+#include<string>
+#include <cctype>
+
+
 using namespace std;
+vector<string> fase1(vector<string> vec);
+int findN(string str,char ch, int n);
 int main(){
     string s;
     ifstream f("entrada.txt");
@@ -32,8 +39,8 @@ int main(){
     for(int i = 0; i < posicoes.size(); i++){
         posicoes[i] = i;
     }
-    posicoes = {2,3,4,0,1};
-    //posicoes = verificarMatrizCorreta(matrix, posicoes, matrizB.size(), matrizB[0].size());
+    //  posicoes = {2,3,4,0,1};
+    posicoes = verificarMatrizCorreta(matrix, posicoes, matrizB.size(), matrizB[0].size());
     vector<int> posicoesN(posicoes.begin() + matrizB[0].size(), posicoes.end());
     matrizB = mudarPosicoes(matrix, posicoes, matrizB.size(), matrizB[0].size());
     cout << "Matriz B" << endl;
@@ -58,16 +65,18 @@ int main(){
     int posSairN;
     double funcObj;
     int iteracoes = 1;
+    cout << endl << endl << endl;
     while(menorQZero){
         cout << "Numero de iteracoes: " << iteracoes << endl;
         cout << "Solucao Basica" << endl;
         solucaoB = solucaoBasica(matrizB, vectorResult);
         mostrarMatriz(solucaoB);
         funcObj = calculaFuncaoObjetivo(coeficientesB, solucaoB);
-        cout << "Função objetivo: " << endl;
-        cout << funcObj;
-        cout << "Multiplicacao simplex" << endl;
+        cout << "Funcao objetivo: ";
+        cout << funcObj << endl;
+        cout << "Multiplicacao simplex: ";
         mostrarMatriz(multSimplex);
+        cout << endl;
         custorN = custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN);
         if(custorN[0][posSairN] < 0){
             menorQZero = true;
@@ -90,4 +99,56 @@ int main(){
         iteracoes++;
     }
     cout << "Acabou :D";
+    cout << "Valor final: " << funcObj << endl;
+}
+int findN(string str,char ch, int n){
+    int vezes = 0;
+    for (int i = 0; i < str.length(); i++) {
+        if (str[i] == ch) {
+            vezes++;
+        }
+        if (vezes == n)
+            return i;
+    }
+    return -1;
+}
+vector<string> fase1(vector<string> vec){
+    int pos = vec[0].find('a');
+    if(pos != string::npos){
+        vec[0].erase(vec[0].begin() + pos);
+        vec[0].erase(vec[0].begin()+pos);
+        vec[0].insert(pos, "in");
+        string aux = vec[0];
+        int i = 1;
+        pos = findN(vec[0], '-', i);
+        i++;
+        while(pos != -1){
+            aux[pos] = '+';
+            pos = findN(vec[0], '-', i);
+            i++;
+        }
+        i = 1;
+        pos = findN(vec[0], '+', i);
+        i++;
+        while(pos != string::npos){
+            aux[pos] = '-';
+            pos = findN(vec[0], '+', i);
+            i++;
+        }
+        vec[0] = aux;
+        pos= vec[0].find('=');
+        pos++;
+        if(vec[0][pos] == ' '){
+            pos++;
+        }
+        if(!ispunct(vec[0][pos])){
+            vec[0].insert(pos, "-");
+        } else{
+            if(vec[0][pos] == '+'){
+                vec[0].erase(vec[0].begin() + pos);
+            }
+        }
+        cout << vec[0] << endl;
+    }
+    return vec;
 }

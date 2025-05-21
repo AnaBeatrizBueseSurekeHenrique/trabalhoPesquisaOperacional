@@ -11,16 +11,15 @@ vector<vector<double>> multiplicadorSimplex(vector<vector<double>> matrizB, vect
 vector<vector<double>> solucaoBasica(vector<vector<double>> matrizB, vector<vector<double>> b){
     vector<vector<double>> inversaB(matrizB.size(), vector<double>(matrizB[0].size()));
     inversaB = calculaInversa(matrizB);
-    cout << "INVERSA: " << endl;
-    mostrarMatriz(inversaB);
     return (calculaMultiplicacao(inversaB, b));
 }
 
 
 double calculaFuncaoObjetivo(vector<vector<double>> cb, vector<vector<double>> xb){
     double func = 0;
-    for(int j = 0; j < xb[0].size(); j++){
-        func = func + cb[0][j]*xb[0][j];
+    for(int j = 0; j < xb.size(); j++){
+        cout << "CB:" << cb[0][j] << "XB: " << xb[j][0] << endl;
+        func = func + cb[0][j]*xb[j][0];
     }
     return func;
 }
@@ -41,7 +40,6 @@ vector<vector<double>> custoRelativoN(vector<vector<double>> cn, vector<vector<d
         }
         cout << "CustoN: " << custorN[0][j] << endl;
     }
-    cout << "CUSTONMIN: " << custNMin << " " << *posMud;
     return custorN;
 }
 
@@ -54,9 +52,8 @@ int determinacaoPasso(vector<vector<double>> xb, vector<vector<double>> y){
     double aux;
     int pos;
     for(int i = 0; i < xb.size(); i++){
-        if(y[i][0] >= 0){
+        if(y[i][0] > 0){
             aux = xb[i][0]/y[i][0];
-            cout << "AUX:  " << aux << endl;
             if(aux < custNMin){
                 custNMin = aux;
                 pos = i;
@@ -77,8 +74,8 @@ void trocarColunasMatriz(vector<vector<double>> *matrizB, vector<vector<double>>
     for(int i = 0; i < (*matrizB).size(); i++){
         (*matrizN)[i][posN] = aux[i];
     }
-    cout << "Nova matrizB : " << endl;
+    cout << "Nova B : " << endl;
     mostrarMatriz(*matrizB);
-    cout << "Nova matriz n : " << endl;
+    cout << "Nova N : " << endl;
     mostrarMatriz(*matrizN);
 }
