@@ -11,6 +11,8 @@ vector<vector<double>> multiplicadorSimplex(vector<vector<double>> matrizB, vect
 vector<vector<double>> solucaoBasica(vector<vector<double>> matrizB, vector<vector<double>> b){
     vector<vector<double>> inversaB(matrizB.size(), vector<double>(matrizB[0].size()));
     inversaB = calculaInversa(matrizB);
+    cout << "MOSTRAR MATRIZ: INVERSA B:  " << endl;
+    mostrarMatriz(inversaB);
     return (calculaMultiplicacao(inversaB, b));
 }
 
@@ -24,30 +26,29 @@ double calculaFuncaoObjetivo(vector<vector<double>> cb, vector<vector<double>> x
     return func;
 }
 
-vector<vector<double>> custoRelativoN(vector<vector<double>> cn, vector<vector<double>> multSimplex, vector<vector<double>> matrizN, int *posMud){
-    vector<vector<double>> custorN(1, vector<double>(cn.size()));
+void custoRelativoN(vector<vector<double>> cn, vector<vector<double>> multSimplex, vector<vector<double>> matrizN, int *posMud, vector<vector<double>> *custorN){
     vector<vector<double>> aN(matrizN.size(), vector<double>(1));
     double custNMin = INT_MAX;
     for(int j = 0; j < cn[0].size(); j++){
         for(int i = 0; i < matrizN.size(); i++){
             aN[i][0] = matrizN[i][j];
         }
+        mostrarMatriz(aN);
         vector<vector<double>> aux = calculaMultiplicacao(multSimplex, aN);
-        custorN[0][j] = cn[0][j] - aux[0][0];
-        if(custorN[0][j] < custNMin){
-            custNMin = custorN[0][j];
+        (*custorN)[0][j] = cn[0][j] - aux[0][0];
+        if((*custorN)[0][j] < custNMin){
+            custNMin = (*custorN)[0][j];
             *posMud = j;
         }
-        cout << "CustoN: " << custorN[0][j] << endl;
+        cout << "CustoN: " << (*custorN)[0][j] << endl;
     }
-    return custorN;
 }
 
 vector<vector<double>> calculoDirecaoSimplex(vector<vector<double>> matrizB, vector<vector<double>> a){
     return(calculaMultiplicacao(calculaInversa(matrizB), a));
 }
 
-int determinacaoPasso(vector<vector<double>> xb, vector<vector<double>> y){
+int determinacaoPasso(vector<vector<double>> xb, vector<vector<double>> y, bool *fase2){
     double custNMin = INT_MAX;
     double aux;
     int pos;
@@ -58,6 +59,8 @@ int determinacaoPasso(vector<vector<double>> xb, vector<vector<double>> y){
                 custNMin = aux;
                 pos = i;
             }
+        } else{
+            *fase2 = false;
         }
     }
     return pos;

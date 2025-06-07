@@ -8,7 +8,7 @@
 
 
 using namespace std;
-vector<string> fase1(vector<string> vec);
+vector<string> verifFase1(vector<string> vec);
 int findN(string str,char ch, int n);
 int main(){
     string s;
@@ -24,9 +24,47 @@ int main(){
         }
     }
     f.close();
+    vec = verifFase1(vec);
+    bool fase1 = false, fase2 = true;
+    int pos;
+    int qntdMaiorIgual = 0, qtndIgual = 0;
+    for(int k = 1; k < vec.size(); k++){
+        pos = vec[k].find('>');
+        if(pos == string::npos){
+            pos = vec[k].find('<');
+            if(pos == string::npos){
+                fase1 = true;
+            }           
+        } else{
+            fase1 = true;
+        }
+    }
+    vector<string> auxVec = vec;
     realizaVariavelFolga(&vec, &maxX);
     maxX--;
     i--;
+    vector<int> varArtificais;
+    if(fase1){
+        maxX++;
+        int aux = maxX;
+        vec[0] = "minz=";
+        int pos;
+        for(int i = 1; i < vec.size(); i++){
+            pos = auxVec[i].find('=');
+            if(auxVec[i][pos-1] == '>' || auxVec[i][pos-1] != '<'){
+                pos = vec[i].find('=');
+                vec[i].insert(pos, "+x" + to_string(maxX));
+                vec[0] += "x" + to_string(maxX) + "+";
+                varArtificais.push_back(maxX);
+                maxX++;
+            }
+        }
+        vec[0].erase(vec[0].begin()+vec[0].size()-1);
+        for(int i = 0; i < vec.size(); i++){
+            cout << vec[i] << endl;
+        }
+        maxX--;
+    }
     vector<vector<double>> matrix(i, vector<double>(maxX));
     vector<vector<double>> vetorLinha1(1, vector<double>(maxX));
     vector<vector<double>> vectorResult(vec.size() - 1, vector<double>(1));
@@ -36,24 +74,109 @@ int main(){
     vector<vector<double>> coeficientesN(1, vector<double>(matrizN[0].size()));
     porValoresMatriz(vec, &matrix, &vetorLinha1, &vectorResult);
     vector<int> posicoes(matrix[0].size());
-    for(int i = 0; i < posicoes.size(); i++){
-        posicoes[i] = i;
+    if(fase1){
+        int pos = 0;
+        for(int i = matrix[0].size()-1; i >= 0; i--){
+            posicoes[pos] = i;
+            pos++;
+        }
+    } else{
+        for(int i = 0; i < posicoes.size(); i++){
+            posicoes[i] = i;
+        }
     }
-    //  posicoes = {2,3,4,0,1};
-    posicoes = verificarMatrizCorreta(matrix, posicoes, matrizB.size(), matrizB[0].size());
+    cout << "POSICOES:  ";
+    for(int i = 0; i < posicoes.size();i++){
+        cout << posicoes[i] << endl;
+    }
+    if(!fase1){     
+        posicoes = verificarMatrizCorreta(matrix, posicoes, matrizB.size(), matrizB[0].size());
+    }    
     vector<int> posicoesN(posicoes.begin() + matrizB[0].size(), posicoes.end());
     matrizB = mudarPosicoes(matrix, posicoes, matrizB.size(), matrizB[0].size());
     cout << "Matriz B" << endl;
     mostrarMatriz(matrizB);
     matrizN = mudarPosicoes(matrix, posicoesN, matrizN.size(), matrizN[0].size());
     coeficientesB = mudarPosicoes(vetorLinha1,posicoes, 1, coeficientesB[0].size());
+    coeficientesN = mudarPosicoes(vetorLinha1, posicoesN, 1, coeficientesN[0].size());
     cout << endl << "Coeficient B " << endl;
     mostrarMatriz(coeficientesB);
-    coeficientesN = mudarPosicoes(vetorLinha1, posicoesN, 1, coeficientesN[0].size());
     cout << "Matriz N" << endl;
     mostrarMatriz(matrizN);
     cout << endl << "Coeficient N " << endl;
     mostrarMatriz(coeficientesN);
+    if(fase1){
+        bool identidade = false;
+        vector<int> pos1(matrizB.size());
+        for(int i = 0; i < pos1.size(); i++){
+            pos1[i] = -1;
+        }
+        while(identidade == false){
+             for(int i = 0; i < pos1.size(); i++){
+                pos1[i] = -1;
+            }
+            identidade = true;
+            int quebra;
+            for(int i = 0; i < matrizB.size(); i++){
+                for(int j = 0; j < matrizB[0].size(); j++){
+                    if(matrizB[i][j] == 0 || matrizB[i][j] == 1){
+                        if(matrizB[i][j] == 1){
+                            if(pos1[i] == -1){
+                                pos1[i] = j;
+                            } else{
+                                identidade = false;
+                                pos1[i] = -1;
+                                quebra = j;
+                                break;
+                            }
+                        }    
+                    } else{
+                        identidade = false;
+                        quebra = j;
+                        break;
+                    }
+                }
+            }
+            mostrarMatriz(matrizB);
+            if(!identidade){
+                int k = 0;
+                while(pos1[k] != -1 && k < pos1.size()){
+                    k++;
+                }
+                if(k < pos1.size()){
+                    for(int i = 0; i < matrizN.size(); i++){
+                        matrizN[i].push_back(matrizB[i][quebra]);
+                        coeficientesN[0].push_back(coeficientesB[0][quebra]);
+                    }
+                    for(int i = 0; i < matrizB.size(); i++){
+                        if(i != k){
+                            matrizB[i][quebra] = 0;;
+                        } else{
+                            matrizB[i][quebra] = 1;
+                        }
+                    }
+                    coeficientesB[0][quebra] = 0;
+                }
+                
+            }
+            cout << "MOSTRIZ N : ";
+            mostrarMatriz(matrizN);
+            mostrarMatriz(matrizB);
+        }
+        //transformar em matriz identidade: 
+        for(int i = 0; i < matrizB.size(); i++){
+            if(matrizB[i][i] != 1){
+                for(int k = 0; k < matrizB.size(); k++){
+                    if(k != i){
+                        if(matrizB[i][k] == 1){
+                            trocarColunasMatriz(&matrizB, &matrizB, i, k);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     vector<vector<double>> solucaoB(1, vector<double>(matrizB[0].size()));
     vector<vector<double>> multSimplex = multiplicadorSimplex(matrizB, coeficientesB);
     vector<vector<double>> custorN(1, vector<double>(coeficientesN.size()));
@@ -65,38 +188,115 @@ int main(){
     int posSairN;
     double funcObj;
     int iteracoes = 1;
-    cout << endl << endl << endl;
-    while(menorQZero){
-        cout << "Numero de iteracoes: " << iteracoes << endl;
-        cout << "Solucao Basica" << endl;
+    int itFase1 = 1;
+    while(fase1){
+        cout << "FASE1 PT 1 ";
+        cout << itFase1 << endl;
+        cout << "MATRIZ B : ";
+        mostrarMatriz(matrizB);
+        cout << "VETOR RESULT: ";
+        mostrarMatriz(vectorResult);
         solucaoB = solucaoBasica(matrizB, vectorResult);
+        cout << "SOLUCAO B: ";
         mostrarMatriz(solucaoB);
-        funcObj = calculaFuncaoObjetivo(coeficientesB, solucaoB);
-        cout << "Funcao objetivo: ";
-        cout << funcObj << endl;
-        cout << "Multiplicacao simplex: ";
-        mostrarMatriz(multSimplex);
-        cout << endl;
-        custorN = custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN);
-        if(custorN[0][posSairN] < 0){
-            menorQZero = true;
-        } else{
-            menorQZero = false;
+        custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, &custorN);
+        mostrarMatriz(matrizN);
+        if(custorN[0][posSairN] > 0){
+            fase1 = false;
+            fase2 = true;
+            for(int i = 0; i < posicoes.size(); i++){
+                for(int j = 0; j < varArtificais.size(); j++){
+                    if(posicoes[i] == varArtificais[j]){
+                        fase2 = false;
+                        break;
+                    }
+                }
+            }
         }
-        for(int i = 0; i < matrizN.size(); i++){
-            aN[i][0] = matrizN[i][posSairN];
+        cout << "MATRIZ B:  "<<endl;
+        mostrarMatriz(matrizB);
+        if(fase1){
+        mostrarMatriz(matrizN);
+            cout << "FASE1???????? ";
+            bool direcaoMenorQZero = false;
+            cout << "DIRECAO SIMPLEX:   " << endl;
+            direcao = calculoDirecaoSimplex(matrizB, aN);
+            mostrarMatriz(direcao);
+            for(int i = 0; i < direcao.size(); i++){
+                if(direcao[i][0] <= 0){
+                    direcaoMenorQZero = true;
+                    break;
+                }
+            }
+            if(direcaoMenorQZero){
+                fase1 = false;
+                fase2 = false;
+            } else{
+                posicaoSairBas = determinacaoPasso(solucaoB, direcao, &fase2);
+                trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
+                trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
+                for(int i = 0; i < posicoes.size(); i++){
+                    if(posicoes[i] > matrizB.size()){
+                        fase1 = false;
+                    } else{
+                        fase1 = true;
+                    }
+                }
+            }
         }
-        direcao = calculoDirecaoSimplex(matrizB, aN);
-        cout << "Direcao simples: " << endl;
-        mostrarMatriz(direcao);
-        posicaoSairBas = determinacaoPasso(solucaoB, direcao);
-        cout << "Posicao sair Basica: " << posicaoSairBas << endl;
-        trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
-        trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
-        aux = posicoesN[posSairN];
-        posicoesN[posSairN] = posicoes[posicaoSairBas];
-        posicoes[posicaoSairBas] = aux;
-        iteracoes++;
+        itFase1++;
+       
+    }
+    
+    cout << endl << endl << endl;
+    for(int i = 0; i < matrizB.size(); i++){
+        if(matrizB[i][i] == 0){
+            for(int k = 0; k < matrizB.size(); k++){
+                if(matrizB[i][k] != 0){
+                    trocarColunasMatriz(&matrizB, &matrizB, i, k);
+                    trocarColunasMatriz();
+                    i = 0;
+                    break;
+                }
+            }
+        }
+    }
+    if(fase2){
+        while(menorQZero){
+            cout << "Numero de iteracoes: " << iteracoes << endl;
+            cout << "Solucao Basica" << endl;
+            solucaoB = solucaoBasica(matrizB, vectorResult);
+            mostrarMatriz(solucaoB);
+            funcObj = calculaFuncaoObjetivo(coeficientesB, solucaoB);
+            cout << "Funcao objetivo: ";
+            cout << funcObj << endl;
+            cout << "Multiplicacao simplex: ";
+            multSimplex = multiplicadorSimplex(matrizB,coeficientesB);
+            mostrarMatriz(multSimplex);
+            cout << endl;
+            custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, &custorN);
+            if(custorN[0][posSairN] < 0){
+                menorQZero = true;
+            } else{
+                menorQZero = false;
+            }
+            for(int i = 0; i < matrizN.size(); i++){
+                aN[i][0] = matrizN[i][posSairN];
+            }
+            direcao = calculoDirecaoSimplex(matrizB, aN);
+            cout << "Direcao simples: " << endl;
+            mostrarMatriz(direcao);
+            posicaoSairBas = determinacaoPasso(solucaoB, direcao, &fase2);
+            cout << "Posicao sair Basica: " << posicaoSairBas << endl;
+            trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
+            trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
+            aux = posicoesN[posSairN];
+            posicoesN[posSairN] = posicoes[posicaoSairBas];
+            posicoes[posicaoSairBas] = aux;
+            iteracoes++;
+        }
+    } else{
+        cout << "PROBLEMA INFACTIVEL";
     }
     cout << "Acabou :D";
     cout << "Valor final: " << funcObj << endl;
@@ -112,7 +312,7 @@ int findN(string str,char ch, int n){
     }
     return -1;
 }
-vector<string> fase1(vector<string> vec){
+vector<string> verifFase1(vector<string> vec){
     int pos = vec[0].find('a');
     if(pos != string::npos){
         vec[0].erase(vec[0].begin() + pos);
@@ -148,7 +348,51 @@ vector<string> fase1(vector<string> vec){
                 vec[0].erase(vec[0].begin() + pos);
             }
         }
-        cout << vec[0] << endl;
+    }
+    for(int i = 1; i < vec.size(); i++){
+        pos = vec[i].find('=');
+        pos++;
+        if(vec[i][pos] == ' '){
+            pos++;
+        }
+        if(vec[i][pos] == '-'){
+            vec[i].erase(vec[i].begin() + pos);
+            int j = 1;
+            while(pos != -1){
+                pos = findN(vec[i], 'x', j);
+                if(pos != -1){
+                    pos--;
+                    cout << "POS: " << vec[i][pos] << endl;
+                    while(isdigit(vec[i][pos]) && pos > 0){
+                        pos--;
+                    }
+                    cout << "POS ANTES: " << vec[i][pos] << endl;
+                    if(vec[i][pos] == '-'){
+                        if(pos == 0){
+                            vec[i].erase(vec[i].begin());
+                        } else{
+                            vec[i][pos] = '+';
+                        }
+                    } else{
+                        if(vec[i][pos] == '+'){
+                            vec[i].erase(vec[i].begin() + pos);
+                            
+                        }
+                        vec[i].insert(vec[i].begin() + pos, '-');
+                    }
+                }
+                j++;
+            }
+            pos = vec[i].find('=');
+            pos--;
+            if(vec[i][pos] == '<'){
+                vec[i][pos] = '>';
+            } else{
+                if(vec[i][pos] == '>'){
+                    vec[i][pos] = '<';
+                }
+            }
+        }
     }
     return vec;
 }
