@@ -5,8 +5,6 @@
 #include<math.h>
 #include<string>
 #include <cctype>
-
-
 using namespace std;
 vector<string> verifFase1(vector<string> vec);
 int findN(string str,char ch, int n);
@@ -44,17 +42,18 @@ int main(){
     maxX--;
     i--;
     vector<int> varArtificais;
+    for(int i = 0; i < vec.size(); i++){
+        cout << vec[i] << endl;
+    }
     if(fase1){
         maxX++;
-        int aux = maxX;
-        vec[0] = "minz=";
+        int auxMaxX = maxX;
         int pos;
         for(int i = 1; i < vec.size(); i++){
             pos = auxVec[i].find('=');
             if(auxVec[i][pos-1] == '>' || auxVec[i][pos-1] != '<'){
                 pos = vec[i].find('=');
                 vec[i].insert(pos, "+x" + to_string(maxX));
-                vec[0] += "x" + to_string(maxX) + "+";
                 varArtificais.push_back(maxX);
                 maxX++;
             }
@@ -97,7 +96,7 @@ int main(){
     cout << "Matriz B" << endl;
     mostrarMatriz(matrizB);
     matrizN = mudarPosicoes(matrix, posicoesN, matrizN.size(), matrizN[0].size());
-    coeficientesB = mudarPosicoes(vetorLinha1,posicoes, 1, coeficientesB[0].size());
+    coeficientesB = mudarPosicoes(vetorLinha1, posicoes, 1, coeficientesB[0].size());
     coeficientesN = mudarPosicoes(vetorLinha1, posicoesN, 1, coeficientesN[0].size());
     cout << endl << "Coeficient B " << endl;
     mostrarMatriz(coeficientesB);
@@ -106,77 +105,10 @@ int main(){
     cout << endl << "Coeficient N " << endl;
     mostrarMatriz(coeficientesN);
     if(fase1){
-        bool identidade = false;
-        vector<int> pos1(matrizB.size());
-        for(int i = 0; i < pos1.size(); i++){
-            pos1[i] = -1;
-        }
-        while(identidade == false){
-             for(int i = 0; i < pos1.size(); i++){
-                pos1[i] = -1;
-            }
-            identidade = true;
-            int quebra;
-            for(int i = 0; i < matrizB.size(); i++){
-                for(int j = 0; j < matrizB[0].size(); j++){
-                    if(matrizB[i][j] == 0 || matrizB[i][j] == 1){
-                        if(matrizB[i][j] == 1){
-                            if(pos1[i] == -1){
-                                pos1[i] = j;
-                            } else{
-                                identidade = false;
-                                pos1[i] = -1;
-                                quebra = j;
-                                break;
-                            }
-                        }    
-                    } else{
-                        identidade = false;
-                        quebra = j;
-                        break;
-                    }
-                }
-            }
-            mostrarMatriz(matrizB);
-            if(!identidade){
-                int k = 0;
-                while(pos1[k] != -1 && k < pos1.size()){
-                    k++;
-                }
-                if(k < pos1.size()){
-                    for(int i = 0; i < matrizN.size(); i++){
-                        matrizN[i].push_back(matrizB[i][quebra]);
-                        coeficientesN[0].push_back(coeficientesB[0][quebra]);
-                    }
-                    for(int i = 0; i < matrizB.size(); i++){
-                        if(i != k){
-                            matrizB[i][quebra] = 0;;
-                        } else{
-                            matrizB[i][quebra] = 1;
-                        }
-                    }
-                    coeficientesB[0][quebra] = 0;
-                }
-                
-            }
-            cout << "MOSTRIZ N : ";
-            mostrarMatriz(matrizN);
-            mostrarMatriz(matrizB);
-        }
-        //transformar em matriz identidade: 
-        for(int i = 0; i < matrizB.size(); i++){
-            if(matrizB[i][i] != 1){
-                for(int k = 0; k < matrizB.size(); k++){
-                    if(k != i){
-                        if(matrizB[i][k] == 1){
-                            trocarColunasMatriz(&matrizB, &matrizB, i, k);
-                        }
-                    }
-                }
-            }
-        }
+        verificarIdentidadeB(&matrizB, &matrizN, &posicoes, &posicoesN, &coeficientesB, &coeficientesN);
     }
-    
+    cout << "MATRIZ B AGR:  " << endl;
+    mostrarMatriz(matrizB);
     vector<vector<double>> solucaoB(1, vector<double>(matrizB[0].size()));
     vector<vector<double>> multSimplex = multiplicadorSimplex(matrizB, coeficientesB);
     vector<vector<double>> custorN(1, vector<double>(coeficientesN.size()));
@@ -194,14 +126,16 @@ int main(){
         cout << itFase1 << endl;
         cout << "MATRIZ B : ";
         mostrarMatriz(matrizB);
-        cout << "VETOR RESULT: ";
-        mostrarMatriz(vectorResult);
         solucaoB = solucaoBasica(matrizB, vectorResult);
         cout << "SOLUCAO B: ";
         mostrarMatriz(solucaoB);
+        multSimplex = multiplicadorSimplex(matrizB, coeficientesB);
+        cout << "Mult Simplex" << endl;
+        mostrarMatriz(multSimplex);
         custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, &custorN);
+        cout << "MATRIZ N ??????" << endl;
         mostrarMatriz(matrizN);
-        if(custorN[0][posSairN] > 0){
+        if(custorN[0][posSairN] >= 0){
             fase1 = false;
             fase2 = true;
             for(int i = 0; i < posicoes.size(); i++){
@@ -215,15 +149,19 @@ int main(){
         }
         cout << "MATRIZ B:  "<<endl;
         mostrarMatriz(matrizB);
+        verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
         if(fase1){
-        mostrarMatriz(matrizN);
             cout << "FASE1???????? ";
             bool direcaoMenorQZero = false;
+            for(int i = 0; i < matrizN.size(); i++){
+                aN[i][0] = matrizN[i][posSairN];
+            }
             cout << "DIRECAO SIMPLEX:   " << endl;
             direcao = calculoDirecaoSimplex(matrizB, aN);
             mostrarMatriz(direcao);
             for(int i = 0; i < direcao.size(); i++){
                 if(direcao[i][0] <= 0){
+                    cout << "VALOR DIRECAO:  " << direcao[i][0] << endl;
                     direcaoMenorQZero = true;
                     break;
                 }
@@ -235,6 +173,9 @@ int main(){
                 posicaoSairBas = determinacaoPasso(solucaoB, direcao, &fase2);
                 trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
                 trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
+                aux = posicoesN[posSairN];
+                posicoesN[posSairN] = posicoes[posicaoSairBas];
+                posicoes[posicaoSairBas] = aux;
                 for(int i = 0; i < posicoes.size(); i++){
                     if(posicoes[i] > matrizB.size()){
                         fase1 = false;
@@ -244,23 +185,13 @@ int main(){
                 }
             }
         }
+        verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
         itFase1++;
        
     }
-    
+    verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
     cout << endl << endl << endl;
-    for(int i = 0; i < matrizB.size(); i++){
-        if(matrizB[i][i] == 0){
-            for(int k = 0; k < matrizB.size(); k++){
-                if(matrizB[i][k] != 0){
-                    trocarColunasMatriz(&matrizB, &matrizB, i, k);
-                    trocarColunasMatriz();
-                    i = 0;
-                    break;
-                }
-            }
-        }
-    }
+    
     if(fase2){
         while(menorQZero){
             cout << "Numero de iteracoes: " << iteracoes << endl;
@@ -283,23 +214,32 @@ int main(){
             for(int i = 0; i < matrizN.size(); i++){
                 aN[i][0] = matrizN[i][posSairN];
             }
+            cout << "VALORES: " << custorN[0][posSairN] << endl;
             direcao = calculoDirecaoSimplex(matrizB, aN);
             cout << "Direcao simples: " << endl;
             mostrarMatriz(direcao);
             posicaoSairBas = determinacaoPasso(solucaoB, direcao, &fase2);
             cout << "Posicao sair Basica: " << posicaoSairBas << endl;
-            trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
-            trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
-            aux = posicoesN[posSairN];
-            posicoesN[posSairN] = posicoes[posicaoSairBas];
-            posicoes[posicaoSairBas] = aux;
-            iteracoes++;
+            if(menorQZero){
+                trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
+                trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
+                aux = posicoesN[posSairN];
+                posicoesN[posSairN] = posicoes[posicaoSairBas];
+                posicoes[posicaoSairBas] = aux;
+                iteracoes++;
+                verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
+            }
         }
     } else{
         cout << "PROBLEMA INFACTIVEL";
     }
     cout << "Acabou :D";
+    funcObj = calculaFuncaoObjetivo(coeficientesB, solucaoB);
     cout << "Valor final: " << funcObj << endl;
+    cout << "Solucao B:   " << endl;
+    mostrarMatriz(solucaoB);
+    cout << "Coeficientes B: ";
+    mostrarMatriz(coeficientesB);
 }
 int findN(string str,char ch, int n){
     int vezes = 0;
@@ -396,3 +336,5 @@ vector<string> verifFase1(vector<string> vec){
     }
     return vec;
 }
+
+// 1e-9
