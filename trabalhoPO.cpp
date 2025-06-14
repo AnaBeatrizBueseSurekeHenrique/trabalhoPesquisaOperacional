@@ -1,32 +1,35 @@
 #include <iostream>
-#include "transformaMatrizEquacao.h"
-#include "calcularMatrizB.h"
 #include "calculosParaSimplex.h"
 #include<math.h>
 #include<string>
 #include <cctype>
+
 using namespace std;
+
 vector<string> verifFase1(vector<string> vec);
-int findN(string str,char ch, int n);
+void mostrarVetor(vector<string> vec);
+
 int main(){
     string s;
     ifstream f("entrada.txt");
     vector<string> vec;
-    int i;
+    int qntdLinhas = 0;
     int maxX;
-    i = 0;
     while (getline(f, s)){
         if(!s.empty()){
-            vec.insert(vec.begin() + i, s);
-            i++;
+            vec.insert(vec.begin() + qntdLinhas, s);
+            qntdLinhas++;
         }
     }
     f.close();
+    
     vec = verifFase1(vec);
+   
     bool fase1 = false, fase2 = true;
     int pos;
-    int qntdMaiorIgual = 0, qtndIgual = 0;
-    for(int k = 1; k < vec.size(); k++){
+    //verifica se ha necessidade para a fase 1
+    int k = 1;
+    while(k < vec.size() && !fase1){
         pos = vec[k].find('>');
         if(pos == string::npos){
             pos = vec[k].find('<');
@@ -36,46 +39,49 @@ int main(){
         } else{
             fase1 = true;
         }
+        k++;
     }
+    
     vector<string> auxVec = vec;
     realizaVariavelFolga(&vec, &maxX);
+    
     maxX--;
-    i--;
-    vector<int> varArtificais;
-    for(int i = 0; i < vec.size(); i++){
-        cout << vec[i] << endl;
-    }
+    qntdLinhas--;
+    cout << "Adicionadas as variaveis de folga, sistema atual: " << endl;
+    mostrarVetor(vec);
+    // necessario para a fase1, encontra o valor maximo de x antes das variaveis artificiais serem adicionadas.
+    int auxMaxX = maxX;
     if(fase1){
         maxX++;
-        int auxMaxX = maxX;
         int pos;
+        
         for(int i = 1; i < vec.size(); i++){
+            
             pos = auxVec[i].find('=');
+            // caso o sistema nao for de desigualde, ou se a desigualdade for de maior que, adicionara uma variavel de folga.
             if(auxVec[i][pos-1] == '>' || auxVec[i][pos-1] != '<'){
                 pos = vec[i].find('=');
                 vec[i].insert(pos, "+x" + to_string(maxX));
-                varArtificais.push_back(maxX);
                 maxX++;
             }
         }
-        vec[0].erase(vec[0].begin()+vec[0].size()-1);
-        for(int i = 0; i < vec.size(); i++){
-            cout << vec[i] << endl;
-        }
         maxX--;
     }
-    vector<vector<double>> matrix(i, vector<double>(maxX));
+    
+    vector<vector<double>> matrizA(qntdLinhas, vector<double>(maxX));
+    vector<vector<double>> matrizB(qntdLinhas, vector<double>(qntdLinhas));
+    vector<vector<double>> matrizN(qntdLinhas, vector<double> (maxX - qntdLinhas));
+    vector<vector<double>> coeficientesB (1, vector<double>(matrizB[0].size()));
+    vector<vector<double>> coeficientesN(1, vector<double>(matrizN[0].size()));
     vector<vector<double>> vetorLinha1(1, vector<double>(maxX));
     vector<vector<double>> vectorResult(vec.size() - 1, vector<double>(1));
-    vector<vector<double>> matrizB(i, vector<double>(i));
-    vector<vector<double>> coeficientesB (1, vector<double>(matrizB[0].size()));
-    vector<vector<double>> matrizN(i, vector<double> (maxX - i));
-    vector<vector<double>> coeficientesN(1, vector<double>(matrizN[0].size()));
-    porValoresMatriz(vec, &matrix, &vetorLinha1, &vectorResult);
-    vector<int> posicoes(matrix[0].size());
+   //transforma o sistema em matrizes: 
+    porValoresMatriz(vec, &matrizA, &vetorLinha1, &vectorResult);
+    
+    vector<int> posicoes(matrizA[0].size());
     if(fase1){
         int pos = 0;
-        for(int i = matrix[0].size()-1; i >= 0; i--){
+        for(int i = matrizA[0].size()-1; i >= 0; i--){
             posicoes[pos] = i;
             pos++;
         }
@@ -84,35 +90,25 @@ int main(){
             posicoes[i] = i;
         }
     }
-    cout << "POSICOES:  ";
-    for(int i = 0; i < posicoes.size();i++){
-        cout << posicoes[i] << endl;
-    }
-    if(!fase1){     
-        posicoes = verificarMatrizCorreta(matrix, posicoes, matrizB.size(), matrizB[0].size());
+    if(!fase1){
+        // encontra uma matriz com determinante diferente de zero paera a matriz B.     
+        posicoes = verificarMatrizCorreta(matrizA, posicoes, matrizB.size(), matrizB[0].size());
     }    
     vector<int> posicoesN(posicoes.begin() + matrizB[0].size(), posicoes.end());
-    matrizB = mudarPosicoes(matrix, posicoes, matrizB.size(), matrizB[0].size());
-    cout << "Matriz B" << endl;
-    mostrarMatriz(matrizB);
-    matrizN = mudarPosicoes(matrix, posicoesN, matrizN.size(), matrizN[0].size());
+    
+    matrizB = mudarPosicoes(matrizA, posicoes, matrizB.size(), matrizB[0].size());
+    matrizN = mudarPosicoes(matrizA, posicoesN, matrizN.size(), matrizN[0].size());
+    
     coeficientesB = mudarPosicoes(vetorLinha1, posicoes, 1, coeficientesB[0].size());
     coeficientesN = mudarPosicoes(vetorLinha1, posicoesN, 1, coeficientesN[0].size());
-    cout << endl << "Coeficient B " << endl;
-    mostrarMatriz(coeficientesB);
-    cout << "Matriz N" << endl;
-    mostrarMatriz(matrizN);
-    cout << endl << "Coeficient N " << endl;
-    mostrarMatriz(coeficientesN);
+    
     if(fase1){
         verificarIdentidadeB(&matrizB, &matrizN, &posicoes, &posicoesN, &coeficientesB, &coeficientesN);
     }
-    cout << "MATRIZ B AGR:  " << endl;
-    mostrarMatriz(matrizB);
     vector<vector<double>> solucaoB(1, vector<double>(matrizB[0].size()));
     vector<vector<double>> multSimplex = multiplicadorSimplex(matrizB, coeficientesB);
-    vector<vector<double>> custorN(1, vector<double>(coeficientesN.size()));
-    vector<vector<double>> aN(matrizN.size(), vector<double>(1));
+    vector<vector<double>> custorNFase1(1, vector<double>(coeficientesN.size()));
+    vector<vector<double>> aNFase1(matrizN.size(), vector<double>(1));
     vector<vector<double>> direcao(matrizB.size(), vector<double>(1));
     bool menorQZero = true;
     int posicaoSairBas;
@@ -121,81 +117,73 @@ int main(){
     double funcObj;
     int iteracoes = 1;
     int itFase1 = 1;
+    cout << "valor max pra basica: " << auxMaxX << endl;
     while(fase1){
-        cout << "FASE1 PT 1 ";
-        cout << itFase1 << endl;
-        cout << "MATRIZ B : ";
-        mostrarMatriz(matrizB);
+        cout << "Fase 1, iteracao numero " << itFase1 << endl;
         solucaoB = solucaoBasica(matrizB, vectorResult);
-        cout << "SOLUCAO B: ";
+        cout << "Solucao B " << endl;
         mostrarMatriz(solucaoB);
         multSimplex = multiplicadorSimplex(matrizB, coeficientesB);
-        cout << "Mult Simplex" << endl;
-        mostrarMatriz(multSimplex);
-        custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, &custorN);
-        cout << "MATRIZ N ??????" << endl;
-        mostrarMatriz(matrizN);
-        if(custorN[0][posSairN] >= 0){
+        cout << "Multiplicador simplex " << endl;
+        custorNFase1 = custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, custorNFase1);
+        cout << "aQUI";
+        if(custorNFase1[0][posSairN] >= 0){
+            cout << "Aqui " << auxMaxX;
             fase1 = false;
             fase2 = true;
-            for(int i = 0; i < posicoes.size(); i++){
-                for(int j = 0; j < varArtificais.size(); j++){
-                    if(posicoes[i] == varArtificais[j]){
-                        fase2 = false;
-                        break;
-                    }
-                }
-            }
-        }
-        cout << "MATRIZ B:  "<<endl;
-        mostrarMatriz(matrizB);
-        verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
-        if(fase1){
-            cout << "FASE1???????? ";
-            bool direcaoMenorQZero = false;
-            for(int i = 0; i < matrizN.size(); i++){
-                aN[i][0] = matrizN[i][posSairN];
-            }
-            cout << "DIRECAO SIMPLEX:   " << endl;
-            direcao = calculoDirecaoSimplex(matrizB, aN);
-            mostrarMatriz(direcao);
-            for(int i = 0; i < direcao.size(); i++){
-                if(direcao[i][0] <= 0){
-                    cout << "VALOR DIRECAO:  " << direcao[i][0] << endl;
-                    direcaoMenorQZero = true;
+            for(int i = 0; i < matrizB[0].size(); i++){
+                if(posicoes[i] > auxMaxX){
+                    fase2 = false;
+                    cout << "NÃO VAI??? " << endl;
                     break;
                 }
             }
-            if(direcaoMenorQZero){
-                fase1 = false;
-                fase2 = false;
-            } else{
-                posicaoSairBas = determinacaoPasso(solucaoB, direcao, &fase2);
-                trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
-                trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
-                aux = posicoesN[posSairN];
-                posicoesN[posSairN] = posicoes[posicaoSairBas];
-                posicoes[posicaoSairBas] = aux;
-                for(int i = 0; i < posicoes.size(); i++){
-                    if(posicoes[i] > matrizB.size()){
-                        fase1 = false;
-                    } else{
-                        fase1 = true;
-                    }
-                }
+            break;
+        }
+        cout << "Aqui";
+         for(int i = 0; i < matrizN.size(); i++){
+            aNFase1[i][0] = matrizN[i][posSairN];
+        }
+        direcao = calculoDirecaoSimplex(matrizB, aNFase1); 
+        fase1 = false;
+        for(int i = 0; i < direcao.size(); i++){
+            if(direcao[i][0] > 0){
+                fase1 = true;
+                removerVarArtificial(&matrizN, &posicoesN, &coeficientesN, auxMaxX);
+                break;
             }
         }
-        verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
+        posicaoSairBas = determinacaoPasso(solucaoB, direcao, &fase2);
+        trocarPosicoesBeN(&matrizB, &coeficientesB, &matrizN, &coeficientesN, posicaoSairBas, posSairN, &posicoes, &posicoesN);
+        fase2 = true;
+        for(int i = 0; i < matrizB[0].size(); i++){
+            if(posicoes[i] > auxMaxX){
+                fase2 = false;
+                break;
+            }
+            cout << "AQUI?????????? ";
+        }
+        if(fase2){
+            removerVarArtificial(&matrizN, &posicoesN, &coeficientesN, auxMaxX);
+        }
+        verificarDiagonalB(&matrizB, &coeficientesB, &posicoes);
         itFase1++;
-       
     }
-    verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
+    vector<vector<double>> aN(matrizN.size(), vector<double>(1));
+    vector<vector<double>> custorN(1, vector<double>(coeficientesN.size()));
+    cout << "AQUI????????????";
+    verificarDiagonalB(&matrizB, &coeficientesB, &posicoes);
     cout << endl << endl << endl;
-    
+    cout << "MOSTRAR VALORES MATRIZ:  " << endl;
+    mostrarMatriz(matrizB);
+    cout << "POSICOES DA MATRIS: " << endl;
+    for(int i = 0; i < matrizB[0].size(); i++){
+        cout << posicoes[i] << " ";
+    }  
     if(fase2){
         while(menorQZero){
             cout << "Numero de iteracoes: " << iteracoes << endl;
-            cout << "Solucao Basica" << endl;
+            cout << "Solucao Basica??" << endl;
             solucaoB = solucaoBasica(matrizB, vectorResult);
             mostrarMatriz(solucaoB);
             funcObj = calculaFuncaoObjetivo(coeficientesB, solucaoB);
@@ -205,7 +193,7 @@ int main(){
             multSimplex = multiplicadorSimplex(matrizB,coeficientesB);
             mostrarMatriz(multSimplex);
             cout << endl;
-            custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, &custorN);
+            custorN = custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, custorN);
             if(custorN[0][posSairN] < 0){
                 menorQZero = true;
             } else{
@@ -221,14 +209,12 @@ int main(){
             posicaoSairBas = determinacaoPasso(solucaoB, direcao, &fase2);
             cout << "Posicao sair Basica: " << posicaoSairBas << endl;
             if(menorQZero){
-                trocarColunasMatriz(&matrizB, &matrizN, posicaoSairBas, posSairN);
-                trocarColunasMatriz(&coeficientesB, &coeficientesN, posicaoSairBas, posSairN);
-                aux = posicoesN[posSairN];
-                posicoesN[posSairN] = posicoes[posicaoSairBas];
-                posicoes[posicaoSairBas] = aux;
+                trocarPosicoesBeN(&matrizB, &coeficientesB, &matrizN, &coeficientesN, posicaoSairBas, posSairN, &posicoes, &posicoesN);
                 iteracoes++;
-                verificarDiagonalB(&matrizB, &coeficientesB, posicoes);
+                //verificarDiagonalB(&matrizB, &coeficientesB, &posicoes);
             }
+            cout << "Matriz basica valor: ";
+            mostrarMatriz(matrizB);
         }
     } else{
         cout << "PROBLEMA INFACTIVEL";
@@ -240,47 +226,54 @@ int main(){
     mostrarMatriz(solucaoB);
     cout << "Coeficientes B: ";
     mostrarMatriz(coeficientesB);
+    return 0;
 }
-int findN(string str,char ch, int n){
-    int vezes = 0;
-    for (int i = 0; i < str.length(); i++) {
-        if (str[i] == ch) {
-            vezes++;
-        }
-        if (vezes == n)
-            return i;
+void mostrarVetor(vector<string> vec){
+    for(int i = 0; i < vec.size(); i++){
+        cout << vec[i] << endl;
     }
-    return -1;
 }
 vector<string> verifFase1(vector<string> vec){
+    //verifica se o problema e de maximizacao
     int pos = vec[0].find('a');
+    
     if(pos != string::npos){
+        cout << "PROBLEMA DE MAXMIZACAO ENCONTRADO! Transformando em de minimizacao...";
         vec[0].erase(vec[0].begin() + pos);
         vec[0].erase(vec[0].begin()+pos);
         vec[0].insert(pos, "in");
+        // transforma em problema de minimizacao
+        
         string aux = vec[0];
         int i = 1;
-        pos = findN(vec[0], '-', i);
+        pos = achar_n_vez(vec[0], '-', i);
         i++;
+
         while(pos != -1){
+            //encontra -, e os transforma em +
             aux[pos] = '+';
-            pos = findN(vec[0], '-', i);
+            pos = achar_n_vez(vec[0], '-', i);
             i++;
         }
+
         i = 1;
-        pos = findN(vec[0], '+', i);
+        pos = achar_n_vez(vec[0], '+', i);
         i++;
         while(pos != string::npos){
+            //encontra os +, e os transforma em -
             aux[pos] = '-';
-            pos = findN(vec[0], '+', i);
+            pos = achar_n_vez(vec[0], '+', i);
             i++;
         }
+
         vec[0] = aux;
         pos= vec[0].find('=');
         pos++;
+
         if(vec[0][pos] == ' '){
             pos++;
         }
+        //checa se havia sinal no primeiro x da primeira linha, se nao ha, insere um - antes dele.
         if(!ispunct(vec[0][pos])){
             vec[0].insert(pos, "-");
         } else{
@@ -289,6 +282,8 @@ vector<string> verifFase1(vector<string> vec){
             }
         }
     }
+    //apos a verificao da primeira linha, verifica se ha valor negativo apos o sinal de =
+    
     for(int i = 1; i < vec.size(); i++){
         pos = vec[i].find('=');
         pos++;
@@ -296,17 +291,17 @@ vector<string> verifFase1(vector<string> vec){
             pos++;
         }
         if(vec[i][pos] == '-'){
+            cout << "Valor negativo no vetor b encontrado! Invertendo os sinais....";
             vec[i].erase(vec[i].begin() + pos);
             int j = 1;
+            //se ha, ele multiplicara a linha por -1, invertendo os sinais.
             while(pos != -1){
-                pos = findN(vec[i], 'x', j);
+                pos = achar_n_vez(vec[i], 'x', j);
                 if(pos != -1){
                     pos--;
-                    cout << "POS: " << vec[i][pos] << endl;
                     while(isdigit(vec[i][pos]) && pos > 0){
                         pos--;
                     }
-                    cout << "POS ANTES: " << vec[i][pos] << endl;
                     if(vec[i][pos] == '-'){
                         if(pos == 0){
                             vec[i].erase(vec[i].begin());
@@ -316,13 +311,13 @@ vector<string> verifFase1(vector<string> vec){
                     } else{
                         if(vec[i][pos] == '+'){
                             vec[i].erase(vec[i].begin() + pos);
-                            
                         }
                         vec[i].insert(vec[i].begin() + pos, '-');
                     }
                 }
                 j++;
             }
+
             pos = vec[i].find('=');
             pos--;
             if(vec[i][pos] == '<'){
@@ -332,8 +327,12 @@ vector<string> verifFase1(vector<string> vec){
                     vec[i][pos] = '<';
                 }
             }
+
         }
     }
+    cout << "Sistema atual: " << endl;
+    mostrarVetor(vec);
+    cout << endl << "---------------" << endl << endl;
     return vec;
 }
 
