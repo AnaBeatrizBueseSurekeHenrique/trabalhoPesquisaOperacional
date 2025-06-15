@@ -17,23 +17,22 @@ void mostrarMatriz(vector<vector<double>> matrix){
 
 double calcularDeterminante(vector<vector<double>> matrix){
     double resultado;
-    
     if(matrix.size() > 2){
         resultado = 0;
         
         for(int k = 0; k < matrix.size(); k++){
-            int valorI = 0;
+            int posI = 0;
             vector<vector<double>> aux(matrix.size()-1, vector<double>(matrix.size()-1));
             
             for(int i = 1; i < matrix.size(); i++){
-                int valorJ = 0;
+                int posJ = 0;
                 for(int j = 0; j < matrix.size(); j++){
                     if(j != k){
-                        aux[valorI][valorJ] = matrix[i][j];
-                        valorJ++;
+                        aux[posI][posJ] = matrix[i][j];
+                        posJ++;
                     }  
                 }
-                valorI++;
+                posI++;
             }        
             resultado += matrix[0][k]*pow(-1, k)* calcularDeterminante(aux);
         }
