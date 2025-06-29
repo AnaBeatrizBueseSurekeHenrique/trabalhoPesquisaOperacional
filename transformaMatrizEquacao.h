@@ -14,6 +14,7 @@ double numero(string str, int it){
     int exp;
     double decimal = 0;
     double result = 1;
+    
     string aux = "";
     if(it == 1 && str[it - 1] == '-'){
         result = -1;
@@ -26,6 +27,7 @@ double numero(string str, int it){
             it++;
         }
     }
+
     while(it < str.size() && isdigit(str[it]) || str[it] == '.'){
         aux = "";
         if(isdigit(str[it])){
@@ -87,10 +89,9 @@ string mudarEq(string str, int *maxX){
     int pos;
 
     pos = str.find("=");
-
     if(pos != string::npos){
         if(!ispunct(str[pos-1])){
-            // caso o sistema nao for de desigualdade, nenhuma variavel de folga e adicionada.
+            // caso o sistema nao for de desigualdade, nenhuma variavel de folga será adicionada.
             return str;
         } else{
             str.erase(str.begin() + pos);
@@ -113,6 +114,7 @@ string mudarEq(string str, int *maxX){
 
     str.insert(pos, str2);
     //aumenta o valor do maior de x
+    
     (*maxX)++;
     return str;
 }
@@ -132,8 +134,11 @@ int verificarMaiorX(vector<string> v){
                     maxX = aux;
                 };
             }
+
             j++;
+        
         }while (pos != -1);
+
         j = 1;
     }
     return maxX;
@@ -216,7 +221,7 @@ vector<int> verificarMatrizCorreta(vector<vector<double>> matrizA, vector<int> v
         //ele retornara essa sequencia, caso nao for, permutara novamente.
         novaMatriz = mudarPosicoes(matrizA, vec, tamI, tamJ);
         detMatriz = calcularDeterminante(novaMatriz);
-        if(detMatriz != 0){
+        if(detMatriz != 0){ 
             return vec;
         }
 

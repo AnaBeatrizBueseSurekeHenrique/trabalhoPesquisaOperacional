@@ -1,0 +1,19 @@
+Min z = -x1 + 2x2
+-2x1 + x2 <= 3
+3x1 + 4x2 <= 5
+x1 - x2 <= 2
+// era pra ser -1.66
+
+
+Max z = x1 + x2
+2x1 + x2 <= 18
+-x1 + 2x2 <= 4
+3x1 - 6x2 >= 12
+//era pra ser -11.6
+
+
+Max z = 4x1 + 8x2
+3x1 + 2x2 = 18
+x1 + x2 <= 5
+x1 <= 4
+// n devia ter solucao viavel

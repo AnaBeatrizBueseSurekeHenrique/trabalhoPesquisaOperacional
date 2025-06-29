@@ -5,21 +5,12 @@
 #include <vector>
 #include"transformaMatrizEquacao.h"
 using namespace std;
-vector<vector<double>> multiplicadorSimplex(vector<vector<double>> matrizB, vector<vector<double>> cb){
-    return (calculaMultiplicacao(cb, calculaInversa(matrizB)));
-}
-
 vector<vector<double>> solucaoBasica(vector<vector<double>> matrizB, vector<vector<double>> b){
     return (calculaMultiplicacao(calculaInversa(matrizB), b));
 }
 
-
-double calculaFuncaoObjetivo(vector<vector<double>> cb, vector<vector<double>> xb){
-    double func = 0;
-    for(int j = 0; j < xb.size(); j++){
-        func += cb[0][j]*xb[j][0];
-    }
-    return func;
+vector<vector<double>> multiplicadorSimplex(vector<vector<double>> matrizB, vector<vector<double>> cb){
+    return (calculaMultiplicacao(cb, calculaInversa(matrizB)));
 }
 
 vector<vector<double>> custoRelativoN(vector<vector<double>> cn, vector<vector<double>> multSimplex, vector<vector<double>> matrizN, int *posMud, vector<vector<double>> custorN){
@@ -31,10 +22,9 @@ vector<vector<double>> custoRelativoN(vector<vector<double>> cn, vector<vector<d
             aN[i][0] = matrizN[i][j];
         }
         (custorN)[0][j] = cn[0][j] - calculaMultiplicacao(multSimplex, aN)[0][0];
-        
         if((custorN)[0][j] < custNMin){
             custNMin = (custorN)[0][j];
-            *posMud = j;
+            (*posMud) = j;
         }
     }
 
@@ -80,14 +70,13 @@ void trocarColunasMatriz(vector<vector<double>> *matrizB, vector<vector<double>>
 }
 void trocarPosicoesBeN(vector<vector<double>> *matrizB, vector<vector<double>> *coeficientesB, vector<vector<double>> *matrizN,  vector<vector<double>> *coeficientesN, int posicaoSairBas, int posSairN, vector<int> *posicoes, vector<int> *posicoesN){
     int aux;                
-    
+   
     trocarColunasMatriz(matrizB, matrizN, posicaoSairBas, posSairN);
     trocarColunasMatriz(coeficientesB, coeficientesN, posicaoSairBas, posSairN);
     
     aux = (*posicoesN)[posSairN];
     (*posicoesN)[posSairN] = (*posicoes)[posicaoSairBas];
     (*posicoes)[posicaoSairBas] = aux;
-
 }
 
 void verificarDiagonalB(vector<vector<double>> *matrizB, vector<vector<double>> *coeficienteB, vector<int> *posicoes){
@@ -103,7 +92,7 @@ void verificarDiagonalB(vector<vector<double>> *matrizB, vector<vector<double>> 
                         if((*matrizB)[k][i] == 0){
                             aux = k;
                         }
-                        
+
                         trocarColunasMatriz(matrizB, matrizB, i, k);
                         trocarColunasMatriz(coeficienteB, coeficienteB, i, k);
                         
@@ -119,127 +108,32 @@ void verificarDiagonalB(vector<vector<double>> *matrizB, vector<vector<double>> 
         i++;
     }
 }
-void verificarIdentidadeB(vector<vector<double>> *matrizB, vector<vector<double>> *matrizN, vector<int> *posicoes, vector<int> *posicoesN, vector<vector<double>> *coeficientesB, vector<vector<double>> *coeficientesN){
-    vector<int> posIdentidade(matrizB[0].size());
-    vector<int> posIdentidaN(matrizN[0].size());
-    for(int i = 0; i < posIdentidade.size(); i++){
-        posIdentidade[i] = -1;
-    }
-    for(int i = 0; i < posIdentidaN.size(); i++){
-        posIdentidaN[i] = -1;
-    }
-   
-    for(int i = 0; i < (*matrizB).size(); i++){
-        bool identidade = true;
-        int aux; 
-        int qntd1 = 0;
-        
-        for(int j = 0; j < (*matrizB).size(); j++){
-            
-            if((*matrizB)[j][i] == 1){
-                qntd1++;
-                aux = j;
-            } else{
-                if((*matrizB)[j][i] != 0){
-                    identidade = false;
-                }
-            }            
-        }
-        
-        if(qntd1 == 0 || qntd1 > 1){
-            identidade = false;
-        }
-        if(identidade){
-            posIdentidade[i] = aux;
-        }
-    }
-    
-    for(int i = 0; i < (*matrizN)[0].size(); i++){
-        bool identidade = true;
-        int aux;
-        int qntd1 = 0;
-        
-        for(int j = 0; j < (*matrizN).size(); j++){
-            if((*matrizN)[j][i] == 1){
-                qntd1++;
-                aux = j;
-            } else{
-                if((*matrizN)[j][i] != 0){
-                    identidade = false;
-                }
-            }
-        }
-
-        if(qntd1 == 0 || qntd1 > 1){
-            identidade = false;
-        }
-        
-        if(!identidade){
-            posIdentidaN[i] = -1;
-        } else{
-            posIdentidaN[i] = aux;
-        }
-
-    }
-
-    bool trocar;
-    int valTroca;
-    
-    for(int i = 0; i < posIdentidade.size(); i++){
-        if(posIdentidade[i] == -1){
-            for(int k = 0; k < posIdentidaN.size(); k++){
-                trocar = false;
-
-                if(posIdentidaN[k] != -1){
-                    trocar = true;
-                    
-                    for(int j = 0; j < posIdentidade.size(); j++){
-                        if(posIdentidade[j] == posIdentidaN[k]){
-                            trocar = false;
-                            break;
-                        }
-                    }
-
-                    if(trocar){
-                        valTroca = k;
-                        break;
-                    }
-
-                }
-            }
-            
-            if(trocar){
-                trocarPosicoesBeN(matrizB, coeficientesB, matrizN, coeficientesN, i, valTroca, posicoes, posicoesN);
-                posIdentidade[i] = posIdentidaN[valTroca];
-                posIdentidaN[valTroca] = -1;
-            }
-
-        }
-    }
-    verificarDiagonalB(matrizB, coeficientesB, posicoes);
-}
-
-void removerVarArtificial(vector<vector<double>> *matrizN, vector<int> *posicoesN, vector<int> *posicoes, vector<vector<double>> *coeficientesN,  vector<vector<double>> *custorN,  vector<vector<double>> *aN, int auxMaxX){
-    for(int i = 0; i < (*posicoesN).size(); i++){
+void removerVarArtificial(vector<vector<double>> *matrizN, vector<int> *posicoesN, vector<int> *posicoes, vector<vector<double>> *coeficientesN,  vector<vector<double>> *custorN, int auxMaxX){
+ int posN = (*posicoesN).size();
+    for(int i = 0; i < posN; i++){
         if((*posicoesN)[i] >= auxMaxX){
             for(int j = 0; j < (*matrizN).size(); j++){
                 (*matrizN)[j].erase((*matrizN)[j].begin() + i);
             }
             (*coeficientesN)[0].erase((*coeficientesN)[0].begin() + i);
-            (*posicoesN).erase((*posicoesN).begin() + i);
-            (*custorN)[0].erase((*custorN)[0].begin()+i);
-            (*aN).erase((*aN).begin() + i);
+           (*posicoesN).erase((*posicoesN).begin() + i);
+           (*custorN)[0].erase((*custorN)[0].begin()+i);
+           i = -1;
         }
     }
-        cout << (*posicoes).size() << endl;
-
     while((*posicoes).size() > auxMaxX){
         posicoes->pop_back();
     }
 }
-
-void mostrarValorX(vector<int> posicoes, vector<vector<double>> xb){
-    for(int i = 0; i < posicoes.size(); i++){
+double calculaFuncaoObjetivo(vector<vector<double>> cb, vector<vector<double>> xb){
+    double func = 0;
+    for(int j = 0; j < xb.size(); j++){
+        func += cb[0][j]*xb[j][0];
+    }
+    return func;
+}
+void mostrarValorX(vector<int> posicoes, vector<vector<double>> xb, int maxValX){
+    for(int i = 0; i < maxValX; i++){
         cout << "x" << (i+1) << "= ";
         int k = -1;
         
