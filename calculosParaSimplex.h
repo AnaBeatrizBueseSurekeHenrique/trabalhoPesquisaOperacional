@@ -10,6 +10,7 @@ vector<vector<double>> solucaoBasica(vector<vector<double>> matrizB, vector<vect
 }
 
 vector<vector<double>> multiplicadorSimplex(vector<vector<double>> matrizB, vector<vector<double>> cb){
+
     return (calculaMultiplicacao(cb, calculaInversa(matrizB)));
 }
 

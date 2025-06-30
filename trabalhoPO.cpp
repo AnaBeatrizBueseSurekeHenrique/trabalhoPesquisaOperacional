@@ -72,7 +72,7 @@ int main(){
             pos = auxVec[i].find('<');
             
             // caso sistema não tiver desigualdade menor que, adicionara artificial
-            
+            //qntd > 1 caso A, senão Caso B
             if(pos == string::npos || qntdDesigualdade > 1){
                 pos = vec[i].find('=');
                 vec[i].insert(pos, "+x" + to_string(maxX));
@@ -145,8 +145,10 @@ int main(){
 
     }
     if(!fase1){
-        for(int i = 0; i < matrizA[0].size(); i++){
-            posicoes[i] = i;
+        int pos = 0;
+        for(int i = matrizA[0].size()-1; i >= 0; i--){
+            posicoes[pos] = i;
+            pos++;
         }
         // encontra uma matriz com determinante diferente de zero paera a matriz B.     
         posicoes = verificarMatrizCorreta(matrizA, posicoes, matrizB.size(), matrizB[0].size());
@@ -175,7 +177,7 @@ int main(){
     }
     int posicaoSairBas, posSairN, iteracoes = 1;
     if(fase1){
-        cout << "Inicio fase 1: " << endl;
+        cout << endl << endl << "Inicio fase 1: " << endl;
     }
     while(fase1 && iteracoes < 100){
         cout << "Iteracao numero " << iteracoes << endl;
@@ -189,7 +191,7 @@ int main(){
             for(int i = 0; i < matrizB[0].size(); i++){
                 if(posicoes[i] > auxMaxXOriginal){
                     fase2 = false;
-                    cout << "Há variaveis artificais na básica!";
+                    cout << "Ha variaveis artificais na basica!";
                     haSolucao = false;
                     break;
                 }
@@ -197,7 +199,6 @@ int main(){
             removerVarArtificial(&matrizN, &posicoesN, &posicoes, &coeficientesN, &custorN, auxMaxXOriginal);
             coeficientesB = mudarPosicoes(vetorLinha1, posicoes, 1, coeficientesB[0].size());
             coeficientesN = mudarPosicoes(vetorLinha1, posicoesN, 1, coeficientesN[0].size());
-            cout << "Custos maiores que zero! " << endl;
             break;
         }
          for(int i = 0; i < matrizN.size(); i++){
@@ -248,11 +249,11 @@ int main(){
     } else{
         cout << endl << "Inicio fase 2: " << endl << endl;
     }
-    while(fase2 && iteracoes < 100){
+    while(fase2 && iteracoes < 5){
         cout << endl << "Iteracao numero: " << iteracoes << endl;
         solucaoB = solucaoBasica(matrizB, vectorResult);
-        multSimplex = multiplicadorSimplex(matrizB,coeficientesB);
 
+        multSimplex = multiplicadorSimplex(matrizB,coeficientesB);
         custorN = custoRelativoN(coeficientesN, multSimplex, matrizN, &posSairN, custorN);
 
         if(custorN[0][posSairN] < 0){
@@ -264,7 +265,6 @@ int main(){
                     fase2 = true;
                 }
             }
-            cout << endl << endl;
             if(!fase2){
                 haSolucao = true;
             }
@@ -273,7 +273,7 @@ int main(){
         if(fase2){
             for(int i = 0; i < matrizN.size(); i++){
                 aN[i][0] = matrizN[i][posSairN];
-             }
+            }
             direcao = calculoDirecaoSimplex(matrizB, aN);
             
             fase2 = false;
